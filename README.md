@@ -19,7 +19,8 @@ Step 3 : Read digits using created model "mnist-latest.h5"
     `python main.py`
     above command read images from imgs/ folder and give out of predicted number
 
-> Note: `Images must be in png format, If you want to read other format as well then you have to follow below step.`
+## Note
+> `Images must be in png format, If you want to read other format as well then you have to follow below step.`
 
 main.py line no.71
 `imageFiles = find_ext('imgs','png')`
