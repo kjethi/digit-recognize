@@ -2,10 +2,10 @@
 This is project for read single handwritten digit from image using by Tensorflow and keras 
 
 Folder structure 
-requirements.txt -> contains all the dependent library
-digits_recognition.py -> File which is useful to creating model
-main.py -> This script contains code for reading png files from imgs/ folder and use model which is create by digits_recognition.py file
-imgs/ -> this folder contains single digit image in png format which do you want to read 
+- `requirements.txt` -> contains all the dependent library
+- `digits_recognition.py` -> File which is useful to creating model
+- `main.py` -> This script contains code for reading png files from imgs/ folder and use model which is create by digits_recognition.py file
+- `imgs/` -> this folder contains single digit image in png format which do you want to read 
 
 ## Steps to follow 
 Step 1 : Install all the dependencies related to project
