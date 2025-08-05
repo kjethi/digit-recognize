@@ -1,3 +1,4 @@
+import json
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -26,7 +27,6 @@ app.add_middleware(
     allow_headers=["*"],            # allow all headers
 )
 
-
 def preprocess_image(image: Image.Image) -> np.ndarray:
     """
     Preprocess the uploaded image to match the model's expected input format.
@@ -50,7 +50,7 @@ def preprocess_image(image: Image.Image) -> np.ndarray:
     
     # Resize to 28x28
     image = image.resize((28, 28), Image.BILINEAR)
-    
+    image.save("output.png")
     return np.array(image)
 
 def predict_digit(img_array: np.ndarray) -> tuple:
@@ -61,7 +61,7 @@ def predict_digit(img_array: np.ndarray) -> tuple:
     prediction = model.predict(img_array/255)
     predicted_digit = np.argmax(prediction)
     confidence = float(max(prediction[0]))
-    return predicted_digit, confidence
+    return predicted_digit, confidence, prediction
 
 @app.get("/")
 async def root():
@@ -92,26 +92,29 @@ async def predict_digit_endpoint(file: UploadFile = File(...)):
         JSON response with predicted digit and confidence
     """
     try:
+        
         # Validate file type
         if not file.content_type.startswith('image/'):
             raise HTTPException(
                 status_code=400, 
                 detail="File must be an image"
             )
-        
+
         # Read and process the image
         image_data = await file.read()
         image = Image.open(io.BytesIO(image_data))
-        
+        image.save("output1.png")
         # Preprocess the image
         processed_image = preprocess_image(image)
+
         
         # Predict the digit
-        predicted_digit, confidence = predict_digit(processed_image)
+        predicted_digit, confidence, prediction = predict_digit(processed_image)
         
         return JSONResponse({
             "predicted_digit": int(predicted_digit),
             "confidence": round(confidence, 4),
+            "prediction" : prediction.tolist(),
             "filename": file.filename,
             "message": f"Predicted digit: {predicted_digit} with {confidence:.2%} confidence"
         })
@@ -121,62 +124,3 @@ async def predict_digit_endpoint(file: UploadFile = File(...)):
             status_code=500,
             detail=f"Error processing image: {str(e)}"
         )
-
-@app.post("/predict-batch")
-async def predict_batch_endpoint(files: list[UploadFile] = File(...)):
-    """
-    Predict digits from multiple uploaded images.
-    
-    Args:
-        files: List of image files to process
-        
-    Returns:
-        JSON response with predictions for all images
-    """
-    try:
-        results = []
-        
-        for file in files:
-            # Validate file type
-            if not file.content_type.startswith('image/'):
-                results.append({
-                    "filename": file.filename,
-                    "error": "File must be an image"
-                })
-                continue
-            
-            try:
-                # Read and process the image
-                image_data = await file.read()
-                image = Image.open(io.BytesIO(image_data))
-                
-                # Preprocess the image
-                processed_image = preprocess_image(image)
-                
-                # Predict the digit
-                predicted_digit, confidence = predict_digit(processed_image)
-                
-                results.append({
-                    "filename": file.filename,
-                    "predicted_digit": int(predicted_digit),
-                    "confidence": round(confidence, 4),
-                    "message": f"Predicted digit: {predicted_digit} with {confidence:.2%} confidence"
-                })
-                
-            except Exception as e:
-                results.append({
-                    "filename": file.filename,
-                    "error": f"Error processing image: {str(e)}"
-                })
-        
-        return JSONResponse({
-            "total_files": len(files),
-            "processed_files": len([r for r in results if "error" not in r]),
-            "results": results
-        })
-        
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error processing batch: {str(e)}"
-        ) 

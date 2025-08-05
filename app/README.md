@@ -23,12 +23,6 @@ Upload a single image file to predict the digit.
 **Request**: Multipart form data with image file
 **Response**: JSON with predicted digit, confidence, and filename
 
-### POST `/predict-batch`
-Upload multiple image files for batch prediction.
-
-**Request**: Multipart form data with multiple image files
-**Response**: JSON with predictions for all images
-
 ## Running the Service
 
 ### Prerequisites
